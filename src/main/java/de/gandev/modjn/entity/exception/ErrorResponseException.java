@@ -15,7 +15,7 @@
  */
 package de.gandev.modjn.entity.exception;
 
-import de.gandev.modjn.entity.func.ModbusError;
+import de.gandev.modjn.entity.func.ModbusExceptionResponse;
 
 /**
  *
@@ -27,7 +27,7 @@ public class ErrorResponseException extends Exception {
 	
 	int exceptionCode;
 
-    public ErrorResponseException(ModbusError function) {
+    public ErrorResponseException(ModbusExceptionResponse function) {
         super(function.toString());
     }
 }

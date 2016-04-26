@@ -24,7 +24,7 @@ import java.util.HashMap;
  *
  * @author Andreas Gabriel <ag.gandev@googlemail.com>
  */
-public class ModbusError extends ModbusFunction {
+public class ModbusExceptionResponse extends ModbusFunction {
     /*
      * Modbus Exception Codes
      *
@@ -122,11 +122,11 @@ public class ModbusError extends ModbusFunction {
     private short exceptionCode;
     private String exceptionMessage;
 
-    public ModbusError(short functionCode) {
+    public ModbusExceptionResponse(short functionCode) {
         super(functionCode);
     }
 
-    public ModbusError(short functionCode, short exceptionCode) {
+    public ModbusExceptionResponse(short functionCode, short exceptionCode) {
         super(functionCode);
         this.exceptionCode = exceptionCode;
 

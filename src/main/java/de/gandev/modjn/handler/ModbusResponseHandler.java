@@ -19,7 +19,7 @@ import de.gandev.modjn.ModbusConstants;
 import de.gandev.modjn.entity.ModbusFrame;
 import de.gandev.modjn.entity.exception.ErrorResponseException;
 import de.gandev.modjn.entity.exception.NoResponseException;
-import de.gandev.modjn.entity.func.ModbusError;
+import de.gandev.modjn.entity.func.ModbusExceptionResponse;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import java.util.HashMap;
@@ -51,8 +51,8 @@ public abstract class ModbusResponseHandler extends SimpleChannelInboundHandler<
 
         if (frame == null) {
             throw new NoResponseException();
-        } else if (frame.getFunction() instanceof ModbusError) {
-            throw new ErrorResponseException((ModbusError) frame.getFunction());
+        } else if (frame.getFunction() instanceof ModbusExceptionResponse) {
+            throw new ErrorResponseException((ModbusExceptionResponse) frame.getFunction());
         }
 
         return frame;

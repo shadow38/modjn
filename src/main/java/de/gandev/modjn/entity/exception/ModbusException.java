@@ -24,14 +24,14 @@ public class ModbusException extends Exception {
 	private static final long serialVersionUID = 1501303165557579387L;
 
 	/** modbus error. */
-	private EModbusError error;
+	private ModbusExceptionCode error;
 	
 	/**
 	 * Constructor.
 	 * 
 	 * @param error modbus error
 	 */
-	public ModbusException(EModbusError error) {
+	public ModbusException(ModbusExceptionCode error) {
 		super();
 		this.error = error;
 	}

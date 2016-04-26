@@ -18,7 +18,7 @@ package de.gandev.modjn.entity.exception;
 /**
  * Manage all the supported modbus error.
  */
-public enum EModbusError {
+public enum ModbusExceptionCode {
 
 	ILLEGAL_FUNCTION((short) 0x01), 
 	ILLEGAL_DATA_ADDRESS((short) 0x02), 
@@ -37,7 +37,7 @@ public enum EModbusError {
 	 * 
 	 * @param code modbus frame error code.
 	 */
-	private EModbusError(short code) {
+	private ModbusExceptionCode(short code) {
 		this.code = code;
 	}
 

@@ -24,9 +24,9 @@ import de.gandev.modjn.ModbusServer;
 import de.gandev.modjn.entity.ModbusFrame;
 import de.gandev.modjn.entity.ModbusFunction;
 import de.gandev.modjn.entity.ModbusHeader;
-import de.gandev.modjn.entity.exception.EModbusError;
+import de.gandev.modjn.entity.exception.ModbusExceptionCode;
 import de.gandev.modjn.entity.exception.ModbusException;
-import de.gandev.modjn.entity.func.ModbusError;
+import de.gandev.modjn.entity.func.ModbusExceptionResponse;
 import de.gandev.modjn.entity.func.WriteSingleCoil;
 import de.gandev.modjn.entity.func.WriteSingleRegister;
 import de.gandev.modjn.entity.func.request.ReadCoilsRequest;
@@ -129,10 +129,10 @@ public abstract class ModbusRequestHandler extends
 
 				response = writeMultipleCoilsRequest(context, request);
 			} else {
-				throw new ModbusException(EModbusError.ILLEGAL_FUNCTION);
+				throw new ModbusException(ModbusExceptionCode.ILLEGAL_FUNCTION);
 			}
 		} catch (ModbusException e) {
-			response = new ModbusError(
+			response = new ModbusExceptionResponse(
 					(short) (function.getFunctionCode() | ModbusConstants.ERROR_OFFSET),
 					e.getExceptionCode());
 		}

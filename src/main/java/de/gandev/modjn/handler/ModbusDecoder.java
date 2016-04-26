@@ -19,7 +19,7 @@ import static de.gandev.modjn.ModbusConstants.MBAP_LENGTH;
 import de.gandev.modjn.entity.ModbusFrame;
 import de.gandev.modjn.entity.ModbusFunction;
 import de.gandev.modjn.entity.ModbusHeader;
-import de.gandev.modjn.entity.func.ModbusError;
+import de.gandev.modjn.entity.func.ModbusExceptionResponse;
 import de.gandev.modjn.entity.func.request.ReadCoilsRequest;
 import de.gandev.modjn.entity.func.response.ReadCoilsResponse;
 import de.gandev.modjn.entity.func.request.ReadDiscreteInputsRequest;
@@ -114,9 +114,9 @@ public class ModbusDecoder extends ByteToMessageDecoder {
         }
 
         if (ModbusFunction.isError(functionCode)) {
-            function = new ModbusError(functionCode);
+            function = new ModbusExceptionResponse(functionCode);
         } else if (function == null) {
-            function = new ModbusError(functionCode, (short) 1);
+            function = new ModbusExceptionResponse(functionCode, (short) 1);
         }
 
         function.decode(buffer.readBytes(buffer.readableBytes()));

@@ -46,10 +46,9 @@ public class ModbusWriteMultipleRegistersTest {
     public void testWriteMultipleRegisters() throws NoResponseException, ErrorResponseException, ConnectionException {
         int quantityOfRegisters = 10;
 
-        int[] registers = new int[quantityOfRegisters];
-        registers[0] = 0xFFFF;
-        registers[1] = 0xF0F0;
-        registers[2] = 0x0F0F;
+        short[] registers = new short[quantityOfRegisters];
+        registers[0] = (short) 0xFF;
+        registers[1] = (short) 0xFF;
 
         WriteMultipleRegistersResponse writeMultipleRegisters = modbusClient.writeMultipleRegisters(12321, quantityOfRegisters, registers);
 

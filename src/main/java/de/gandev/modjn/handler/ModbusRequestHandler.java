@@ -1,9 +1,32 @@
+/*
+ * Copyright 2012 modjn Project
+ *
+ * The modjn Project licenses this file to you under the Apache License,
+ * version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at:
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
 package de.gandev.modjn.handler;
 
+import java.net.InetSocketAddress;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import de.gandev.modjn.ModbusConstants;
 import de.gandev.modjn.ModbusServer;
 import de.gandev.modjn.entity.ModbusFrame;
 import de.gandev.modjn.entity.ModbusFunction;
 import de.gandev.modjn.entity.ModbusHeader;
+import de.gandev.modjn.entity.exception.EModbusError;
+import de.gandev.modjn.entity.exception.ModbusException;
+import de.gandev.modjn.entity.func.ModbusError;
 import de.gandev.modjn.entity.func.WriteSingleCoil;
 import de.gandev.modjn.entity.func.WriteSingleRegister;
 import de.gandev.modjn.entity.func.request.ReadCoilsRequest;
@@ -21,107 +44,130 @@ import de.gandev.modjn.entity.func.response.WriteMultipleRegistersResponse;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
- *
+ * 
  * @author ares
  */
-public abstract class ModbusRequestHandler extends SimpleChannelInboundHandler<ModbusFrame> {
+public abstract class ModbusRequestHandler extends
+		SimpleChannelInboundHandler<ModbusFrame> {
 
-    private static final Logger logger = Logger.getLogger(ModbusRequestHandler.class.getSimpleName());
-    private ModbusServer server;
+	private static final Logger logger = Logger
+			.getLogger(ModbusRequestHandler.class.getSimpleName());
+	private ModbusServer server;
 
-    public void setServer(ModbusServer server) {
-        this.server = server;
-    }
+	public void setServer(ModbusServer server) {
+		this.server = server;
+	}
 
-    @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        logger.warning(cause.getLocalizedMessage());
-    }
+	@Override
+	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause)
+			throws Exception {
+		logger.warning(cause.getLocalizedMessage());
+	}
 
-    @Override
-    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        server.removeClient(ctx.channel());
-    }
+	@Override
+	public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+		server.removeClient(ctx.channel());
+	}
 
-    @Override
-    public void channelActive(ChannelHandlerContext ctx) throws Exception {
-        server.addClient(ctx.channel());
-    }
+	@Override
+	public void channelActive(ChannelHandlerContext ctx) throws Exception {
+		server.addClient(ctx.channel());
+	}
 
-    @Override
-    protected void channelRead0(ChannelHandlerContext ctx, ModbusFrame frame) throws Exception {
-        Channel channel = ctx.channel();
+	@Override
+	protected void channelRead0(ChannelHandlerContext ctx, ModbusFrame frame)
+			throws Exception {
+		
+		Channel channel = ctx.channel();
 
-        ModbusFunction function = frame.getFunction();
+		ModbusFunction function = frame.getFunction();
 
-        ModbusFunction response;
+		ModbusFunction response = null;
 
-        logger.log(Level.FINER, function.toString());
+		int slaveId = frame.getHeader().getUnitIdentifier();
+		InetSocketAddress remoteAddress = (InetSocketAddress) channel.remoteAddress();
+		
+		ModbusRequestContext context = new ModbusRequestContext();
+		context.setRemoteAddress(remoteAddress);
+		context.setSlaveId(slaveId);
+		
+		logger.log(Level.FINER, function.toString());
 
-        if (function instanceof WriteSingleCoil) {
-            WriteSingleCoil request = (WriteSingleCoil) function;
+		try {
+			if (function instanceof WriteSingleCoil) {
+				WriteSingleCoil request = (WriteSingleCoil) function;
 
-            response = writeSingleCoil(request);
-        } else if (function instanceof WriteSingleRegister) {
-            WriteSingleRegister request = (WriteSingleRegister) function;
+				response = writeSingleCoil(context, request);
+			} else if (function instanceof WriteSingleRegister) {
+				WriteSingleRegister request = (WriteSingleRegister) function;
 
-            response = writeSingleRegister(request);
-        } else if (function instanceof ReadCoilsRequest) {
-            ReadCoilsRequest request = (ReadCoilsRequest) function;
+				response = writeSingleRegister(context, request);
+			} else if (function instanceof ReadCoilsRequest) {
+				ReadCoilsRequest request = (ReadCoilsRequest) function;
 
-            response = readCoilsRequest(request);
-        } else if (function instanceof ReadDiscreteInputsRequest) {
-            ReadDiscreteInputsRequest request = (ReadDiscreteInputsRequest) function;
+				response = readCoilsRequest(context, request);
+			} else if (function instanceof ReadDiscreteInputsRequest) {
+				ReadDiscreteInputsRequest request = (ReadDiscreteInputsRequest) function;
 
-            response = readDiscreteInputsRequest(request);
-        } else if (function instanceof ReadInputRegistersRequest) {
-            ReadInputRegistersRequest request = (ReadInputRegistersRequest) function;
+				response = readDiscreteInputsRequest(context, request);
+			} else if (function instanceof ReadInputRegistersRequest) {
+				ReadInputRegistersRequest request = (ReadInputRegistersRequest) function;
 
-            response = readInputRegistersRequest(request);
-        } else if (function instanceof ReadHoldingRegistersRequest) {
-            ReadHoldingRegistersRequest request = (ReadHoldingRegistersRequest) function;
+				response = readInputRegistersRequest(context, request);
+			} else if (function instanceof ReadHoldingRegistersRequest) {
+				ReadHoldingRegistersRequest request = (ReadHoldingRegistersRequest) function;
 
-            response = readHoldingRegistersRequest(request);
-        } else if (function instanceof WriteMultipleRegistersRequest) {
-            WriteMultipleRegistersRequest request = (WriteMultipleRegistersRequest) function;
+				response = readHoldingRegistersRequest(context, request);
+			} else if (function instanceof WriteMultipleRegistersRequest) {
+				WriteMultipleRegistersRequest request = (WriteMultipleRegistersRequest) function;
 
-            response = writeMultipleRegistersRequest(request);
-        } else if (function instanceof WriteMultipleCoilsRequest) {
-            WriteMultipleCoilsRequest request = (WriteMultipleCoilsRequest) function;
+				response = writeMultipleRegistersRequest(context, request);
+			} else if (function instanceof WriteMultipleCoilsRequest) {
+				WriteMultipleCoilsRequest request = (WriteMultipleCoilsRequest) function;
 
-            response = writeMultipleCoilsRequest(request);
-        } else {
-            throw new UnsupportedOperationException("Function not supported!");
-        }
+				response = writeMultipleCoilsRequest(context, request);
+			} else {
+				throw new ModbusException(EModbusError.ILLEGAL_FUNCTION);
+			}
+		} catch (ModbusException e) {
+			response = new ModbusError(
+					(short) (function.getFunctionCode() | ModbusConstants.ERROR_OFFSET),
+					e.getExceptionCode());
+		}
 
-        ModbusHeader header = new ModbusHeader(
-                frame.getHeader().getTransactionIdentifier(),
-                frame.getHeader().getProtocolIdentifier(),
-                response.calculateLength(),
-                frame.getHeader().getUnitIdentifier());
+		ModbusHeader header = new ModbusHeader(frame.getHeader()
+				.getTransactionIdentifier(), frame.getHeader()
+				.getProtocolIdentifier(), response.calculateLength(), frame
+				.getHeader().getUnitIdentifier());
 
-        ModbusFrame responseFrame = new ModbusFrame(header, response);
+		ModbusFrame responseFrame = new ModbusFrame(header, response);
 
-        channel.write(responseFrame);
-    }
+		channel.write(responseFrame);
+	}
 
-    protected abstract WriteSingleCoil writeSingleCoil(WriteSingleCoil request);
+	protected abstract WriteSingleCoil writeSingleCoil(ModbusRequestContext pContext,
+			WriteSingleCoil request) throws ModbusException;
 
-    protected abstract WriteSingleRegister writeSingleRegister(WriteSingleRegister request);
+	protected abstract WriteSingleRegister writeSingleRegister(ModbusRequestContext pContext,
+			WriteSingleRegister request) throws ModbusException;
 
-    protected abstract ReadCoilsResponse readCoilsRequest(ReadCoilsRequest request);
+	protected abstract ReadCoilsResponse readCoilsRequest(ModbusRequestContext pContext,
+			ReadCoilsRequest request) throws ModbusException;
 
-    protected abstract ReadDiscreteInputsResponse readDiscreteInputsRequest(ReadDiscreteInputsRequest request);
+	protected abstract ReadDiscreteInputsResponse readDiscreteInputsRequest(ModbusRequestContext pContext, ReadDiscreteInputsRequest request)
+			throws ModbusException;
 
-    protected abstract ReadInputRegistersResponse readInputRegistersRequest(ReadInputRegistersRequest request);
+	protected abstract ReadInputRegistersResponse readInputRegistersRequest(ModbusRequestContext pContext, ReadInputRegistersRequest request)
+			throws ModbusException;
 
-    protected abstract ReadHoldingRegistersResponse readHoldingRegistersRequest(ReadHoldingRegistersRequest request);
+	protected abstract ReadHoldingRegistersResponse readHoldingRegistersRequest(ModbusRequestContext pContext, ReadHoldingRegistersRequest request)
+			throws ModbusException;
 
-    protected abstract WriteMultipleRegistersResponse writeMultipleRegistersRequest(WriteMultipleRegistersRequest request);
+	protected abstract WriteMultipleRegistersResponse writeMultipleRegistersRequest(ModbusRequestContext pContext, WriteMultipleRegistersRequest request)
+			throws ModbusException;
 
-    protected abstract WriteMultipleCoilsResponse writeMultipleCoilsRequest(WriteMultipleCoilsRequest request);
+	protected abstract WriteMultipleCoilsResponse writeMultipleCoilsRequest(ModbusRequestContext pContext, WriteMultipleCoilsRequest request)
+			throws ModbusException;
 }

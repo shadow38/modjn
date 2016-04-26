@@ -20,5 +20,7 @@ package de.gandev.modjn.entity.exception;
  * @author Andreas Gabriel <ag.gandev@googlemail.com>
  */
 public class NoResponseException extends Exception {
+
+	private static final long serialVersionUID = -8627415527387277653L;
     
 }

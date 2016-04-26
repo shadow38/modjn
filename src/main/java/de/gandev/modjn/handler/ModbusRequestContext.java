@@ -13,17 +13,33 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package de.gandev.modjn.entity.exception;
+package de.gandev.modjn.handler;
 
-/**
- *
- * @author Andreas Gabriel <ag.gandev@googlemail.com>
- */
-public class ConnectionException extends Exception {
+import java.net.InetSocketAddress;
 
-	private static final long serialVersionUID = -2406126557425021452L;
+public final class ModbusRequestContext {
 
-	public ConnectionException(String message) {
-        super(message);
-    }
+	private InetSocketAddress remoteAddress;
+	private int slaveId;
+	
+	public ModbusRequestContext() {
+		super();
+	}
+	
+	public void setRemoteAddress(InetSocketAddress remoteAddress) {
+		this.remoteAddress = remoteAddress;
+	}
+	
+	public InetSocketAddress getRemoteAddress() {
+		return remoteAddress;
+	}
+	
+	public int getSlaveId() {
+		return slaveId;
+	}
+	
+	public void setSlaveId(int pSlaveId) {
+		this.slaveId = pSlaveId;
+	}
+	
 }

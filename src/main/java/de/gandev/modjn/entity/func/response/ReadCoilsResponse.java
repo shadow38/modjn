@@ -15,73 +15,105 @@
  */
 package de.gandev.modjn.entity.func.response;
 
-import de.gandev.modjn.entity.ModbusFunction;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import java.util.BitSet;
+
+import java.util.Arrays;
+
+import de.gandev.modjn.entity.ModbusFunction;
 
 /**
- *
+ * 
  * @author Andreas Gabriel <ag.gandev@googlemail.com>
  */
 public class ReadCoilsResponse extends ModbusFunction {
 
-    private short byteCount;
-    private BitSet coilStatus;
+	private short byteCount;
+	private boolean[] coilStatus;
 
-    public ReadCoilsResponse() {
-        super(READ_COILS);
-    }
+	public ReadCoilsResponse() {
+		super(READ_COILS);
+	}
 
-    public ReadCoilsResponse(BitSet coilStatus) {
-        super(READ_COILS);
+	public ReadCoilsResponse(boolean[] coilStatus) {
+		super(READ_COILS);
 
-        byte[] coils = coilStatus.toByteArray();
+		// maximum of 2000 bits
+		if (coilStatus.length > 250) {
+			throw new IllegalArgumentException();
+		}
 
-        // maximum of 2000 bits
-        if (coils.length > 250) {
-            throw new IllegalArgumentException();
-        }
+		this.byteCount = (short) Math.ceil((double)coilStatus.length / 8);
+		this.coilStatus = coilStatus;
+	}
 
-        this.byteCount = (short) coils.length;
-        this.coilStatus = coilStatus;
-    }
+	public boolean[] getCoilStatus() {
+		return coilStatus;
+	}
 
-    public BitSet getCoilStatus() {
-        return coilStatus;
-    }
+	public short getByteCount() {
+		return byteCount;
+	}
 
-    public short getByteCount() {
-        return byteCount;
-    }
+	@Override
+	public int calculateLength() {
+		return 1 + 1 + byteCount;
+	}
 
-    @Override
-    public int calculateLength() {
-        return 1 + 1 + byteCount;
-    }
+	@Override
+	public ByteBuf encode() {
+		ByteBuf buf = Unpooled.buffer(calculateLength());
+		buf.writeByte(getFunctionCode());
+		
+		buf.writeByte(byteCount);
+		for(int i=0;i<byteCount;i++){
+			short val =0;
+			short mask =0x01;
+			
+			for (int j = 0; j < 8; j++) {
+				
+				if(i*8+j >= coilStatus.length )
+					break;
+				if(coilStatus[i*8+j] ){
+					val|=mask;
+				}
+				mask<<=1;
+			}
+			buf.writeByte(val);
+		}
+		return buf;
+	}
 
-    @Override
-    public ByteBuf encode() {
-        ByteBuf buf = Unpooled.buffer(calculateLength());
-        buf.writeByte(getFunctionCode());
-        buf.writeByte(byteCount);
-        buf.writeBytes(coilStatus.toByteArray());
+	@Override
+	public void decode(ByteBuf data) {
+		byteCount = data.readUnsignedByte();
 
-        return buf;
-    }
+		// TODO we are reading all the bits from all the given byte.
+		// we may add some false values at the end of the boolean array.
+		// for example, if we ask for 2 bits, we receive an entire byte, so we decode 8 bits from the response.
+		// the 2 first are filled with the actual response and the 6 other bits are filled with false.
+		
+		coilStatus = new boolean[byteCount*8];
+		
+		for (int i = 0; i < byteCount; i++) {
+			
+			short val = data.readByte();
+			short mask =0x01;
+			
+			for (int j = 0; j < 8; j++) {
+				if ((val & mask) == 0) {
+					coilStatus[i*8+j] = false;
+				} else {
+					coilStatus[i*8+j] = true;
+				}
+				mask<<=1;
+			}
+		}
+	}
 
-    @Override
-    public void decode(ByteBuf data) {
-        byteCount = data.readUnsignedByte();
-
-        byte[] coils = new byte[byteCount];
-        data.readBytes(coils);
-
-        coilStatus = BitSet.valueOf(coils);
-    }
-
-    @Override
-    public String toString() {
-        return "ReadCoilsResponse{" + "byteCount=" + byteCount + ", coilStatus=" + coilStatus + '}';
-    }
+	@Override
+	public String toString() {
+		return "ReadCoilsResponse{" + "byteCount=" + byteCount
+				+ ", coilStatus=" + Arrays.toString(coilStatus) + '}';
+	}
 }

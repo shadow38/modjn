@@ -26,13 +26,13 @@ import io.netty.buffer.Unpooled;
 public class ReadInputRegistersResponse extends ModbusFunction {
 
     private short byteCount;
-    private int[] inputRegisters;
+    private short[] inputRegisters;
 
     public ReadInputRegistersResponse() {
         super(READ_INPUT_REGISTERS);
     }
 
-    public ReadInputRegistersResponse(int[] inputRegisters) {
+    public ReadInputRegistersResponse(short[] inputRegisters) {
         super(READ_INPUT_REGISTERS);
 
         // maximum of 125 registers
@@ -44,7 +44,7 @@ public class ReadInputRegistersResponse extends ModbusFunction {
         this.inputRegisters = inputRegisters;
     }
 
-    public int[] getInputRegisters() {
+    public short[] getInputRegisters() {
         return inputRegisters;
     }
 
@@ -62,9 +62,9 @@ public class ReadInputRegistersResponse extends ModbusFunction {
         ByteBuf buf = Unpooled.buffer(calculateLength());
         buf.writeByte(getFunctionCode());
         buf.writeByte(byteCount);
-
+        
         for (int i = 0; i < inputRegisters.length; i++) {
-            buf.writeShort(inputRegisters[i]);
+            buf.writeShort((short)inputRegisters[i]);
         }
 
         return buf;
@@ -74,9 +74,9 @@ public class ReadInputRegistersResponse extends ModbusFunction {
     public void decode(ByteBuf data) {
         byteCount = data.readUnsignedByte();
 
-        inputRegisters = new int[byteCount / 2];
+        inputRegisters = new short[byteCount / 2];
         for (int i = 0; i < inputRegisters.length; i++) {
-            inputRegisters[i] = data.readUnsignedShort();
+            inputRegisters[i] = data.readShort();
         }
     }
 

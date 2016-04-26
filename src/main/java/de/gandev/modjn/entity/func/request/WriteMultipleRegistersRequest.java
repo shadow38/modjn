@@ -27,13 +27,13 @@ public class WriteMultipleRegistersRequest extends AbstractFunction {
     //startingAddress = 0x0000 to 0xFFFF
     //quantityOfRegisters = 1 - 123 (0x07D0)
     private short byteCount;
-    private int[] registers;
+    private short[] registers;
 
     public WriteMultipleRegistersRequest() {
         super(WRITE_MULTIPLE_REGISTERS);
     }
 
-    public WriteMultipleRegistersRequest(int startingAddress, int quantityOfRegisters, int[] registers) {
+    public WriteMultipleRegistersRequest(int startingAddress, int quantityOfRegisters, short[] registers) {
         super(WRITE_MULTIPLE_REGISTERS, startingAddress, quantityOfRegisters);
 
         // maximum of 125 registers
@@ -57,7 +57,7 @@ public class WriteMultipleRegistersRequest extends AbstractFunction {
         return address;
     }
 
-    public int[] getRegisters() {
+    public short[] getRegisters() {
         return registers;
     }
 
@@ -85,9 +85,9 @@ public class WriteMultipleRegistersRequest extends AbstractFunction {
 
         byteCount = data.readUnsignedByte();
 
-        registers = new int[byteCount / 2];
+        registers = new short[byteCount / 2];
         for (int i = 0; i < registers.length; i++) {
-            registers[i] = data.readUnsignedShort();
+            registers[i] = data.readShort();
         }
     }
 

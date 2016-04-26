@@ -23,7 +23,9 @@ import de.gandev.modjn.entity.func.ModbusError;
  */
 public class ErrorResponseException extends Exception {
 
-    int exceptionCode;
+	private static final long serialVersionUID = -2127215680991545040L;
+	
+	int exceptionCode;
 
     public ErrorResponseException(ModbusError function) {
         super(function.toString());

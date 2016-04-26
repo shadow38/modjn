@@ -16,14 +16,31 @@
 package de.gandev.modjn.entity.exception;
 
 /**
- *
- * @author Andreas Gabriel <ag.gandev@googlemail.com>
+ * Manage a modbus exception which can be sent to the modbus client.
  */
-public class ConnectionException extends Exception {
+public class ModbusException extends Exception {
 
-	private static final long serialVersionUID = -2406126557425021452L;
+	/**  */
+	private static final long serialVersionUID = 1501303165557579387L;
 
-	public ConnectionException(String message) {
-        super(message);
-    }
+	/** modbus error. */
+	private EModbusError error;
+	
+	/**
+	 * Constructor.
+	 * 
+	 * @param error modbus error
+	 */
+	public ModbusException(EModbusError error) {
+		super();
+		this.error = error;
+	}
+
+	/**
+	 * The exception code associated to the exception. Exception code is sent in the modubs frame after the function code.
+	 * @return exception code
+	 */
+	public short getExceptionCode(){
+		return error.getCode();
+	}
 }

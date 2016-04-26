@@ -15,73 +15,104 @@
  */
 package de.gandev.modjn.entity.func.response;
 
-import de.gandev.modjn.entity.ModbusFunction;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import java.util.BitSet;
+
+import java.util.Arrays;
+
+import de.gandev.modjn.entity.ModbusFunction;
 
 /**
- *
+ * 
  * @author Andreas Gabriel <ag.gandev@googlemail.com>
  */
 public class ReadDiscreteInputsResponse extends ModbusFunction {
 
-    private short byteCount;
-    private BitSet inputStatus;
+	private short byteCount;
+	private boolean[] inputStatus;
 
-    public ReadDiscreteInputsResponse() {
-        super(READ_DISCRETE_INPUTS);
-    }
+	public ReadDiscreteInputsResponse() {
+		super(READ_DISCRETE_INPUTS);
+	}
 
-    public ReadDiscreteInputsResponse(BitSet inputStatus) {
-        super(READ_DISCRETE_INPUTS);
+	public ReadDiscreteInputsResponse(boolean[] inputStatus) {
+		super(READ_DISCRETE_INPUTS);
 
-        byte[] inputs = inputStatus.toByteArray();
+		// maximum of 2000 bits
+		if (inputStatus.length > 250) {
+			throw new IllegalArgumentException();
+		}
 
-        // maximum of 2000 bits
-        if (inputs.length > 250) {
-            throw new IllegalArgumentException();
-        }
+		this.byteCount = (short) Math.ceil((double)inputStatus.length / 8);
+		this.inputStatus = inputStatus;
+	}
 
-        this.byteCount = (short) inputs.length;
-        this.inputStatus = inputStatus;
-    }
+	public boolean[] getInputStatus() {
+		return inputStatus;
+	}
 
-    public BitSet getInputStatus() {
-        return inputStatus;
-    }
+	public short getByteCount() {
+		return byteCount;
+	}
 
-    public short getByteCount() {
-        return byteCount;
-    }
+	@Override
+	public int calculateLength() {
+		return 1 + 1 + byteCount;
+	}
 
-    @Override
-    public int calculateLength() {
-        return 1 + 1 + byteCount;
-    }
+	@Override
+	public ByteBuf encode() {
+		ByteBuf buf = Unpooled.buffer(calculateLength());
+		buf.writeByte(getFunctionCode());
+		buf.writeByte(byteCount);
+		
+		for(int i=0;i<byteCount;i++){
+			short val =0;
+			short mask =0x01;
+			
+			for (int j = 0; j < 8; j++) {
+				
+				if(i*8+j >= inputStatus.length )
+					break;
+				if(inputStatus[i*8+j] ){
+					val|=mask;
+				}
+				mask<<=1;
+			}
+			buf.writeByte(val);
+		}
+		return buf;
+	}
 
-    @Override
-    public ByteBuf encode() {
-        ByteBuf buf = Unpooled.buffer(calculateLength());
-        buf.writeByte(getFunctionCode());
-        buf.writeByte(byteCount);
-        buf.writeBytes(inputStatus.toByteArray());
+	@Override
+	public void decode(ByteBuf data) {
+		byteCount = data.readUnsignedByte();
 
-        return buf;
-    }
+		// TODO we are reading all the bits from all the given byte.
+		// we may add some false values at the end of the boolean array.
+		// for example, if we ask for 2 bits, we receive an entire byte, so we decode 8 bits from the response.
+		// the 2 first are filled with the actual response and the 6 other bits are filled with false.
+		inputStatus = new boolean[byteCount*8];
+		
+		for (int i = 0; i < byteCount; i++) {
+			
+			short val = data.readByte();
+			short mask =0x01;
+			
+			for (int j = 0; j < 8; j++) {
+				if ((val & mask) == 0) {
+					inputStatus[i*8+j] = false;
+				} else {
+					inputStatus[i*8+j] = true;
+				}
+				mask<<=1;
+			}
+		}
+	}
 
-    @Override
-    public void decode(ByteBuf data) {
-        byteCount = data.readUnsignedByte();
-
-        byte[] inputs = new byte[byteCount];
-        data.readBytes(inputs);
-
-        inputStatus = BitSet.valueOf(inputs);
-    }
-
-    @Override
-    public String toString() {
-        return "ReadDiscreteInputsResponse{" + "byteCount=" + byteCount + ", coilStatus=" + inputStatus + '}';
-    }
+	@Override
+	public String toString() {
+		return "ReadDiscreteInputsResponse{" + "byteCount=" + byteCount
+				+ ", coilStatus=" + Arrays.toString(inputStatus) + '}';
+	}
 }

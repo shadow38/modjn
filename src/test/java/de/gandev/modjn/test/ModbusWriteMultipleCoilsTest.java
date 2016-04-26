@@ -15,6 +15,11 @@
  */
 package de.gandev.modjn.test;
 
+import static org.junit.Assert.assertNotNull;
+
+import org.junit.Before;
+import org.junit.Test;
+
 import de.gandev.modjn.ModbusClient;
 import de.gandev.modjn.ModbusServer;
 import de.gandev.modjn.entity.exception.ConnectionException;
@@ -23,39 +28,36 @@ import de.gandev.modjn.entity.exception.NoResponseException;
 import de.gandev.modjn.entity.func.response.WriteMultipleCoilsResponse;
 import de.gandev.modjn.example.ClientForTests;
 import de.gandev.modjn.example.ServerForTests;
-import java.util.BitSet;
-import static org.junit.Assert.assertNotNull;
-import org.junit.Before;
-import org.junit.Test;
 
 /**
- *
+ * 
  * @author Andreas Gabriel <ag.gandev@googlemail.com>
  */
 public class ModbusWriteMultipleCoilsTest {
 
-    ModbusClient modbusClient;
-    ModbusServer modbusServer;
+	ModbusClient modbusClient;
+	ModbusServer modbusServer;
 
-    @Before
-    public void setUp() throws Exception {
-        modbusServer = ServerForTests.getInstance().getModbusServer();
-        modbusClient = ClientForTests.getInstance().getModbusClient();
-    }
+	@Before
+	public void setUp() throws Exception {
+		modbusServer = ServerForTests.getInstance().getModbusServer();
+		modbusClient = ClientForTests.getInstance().getModbusClient();
+	}
 
-    @Test
-    public void testWriteMultipleCoils() throws NoResponseException, ErrorResponseException, ConnectionException {
-        int quantityOfCoils = 10;
+	@Test
+	public void testWriteMultipleCoils() throws NoResponseException,
+			ErrorResponseException, ConnectionException {
+		int quantityOfCoils = 10;
+		boolean[] coils = new boolean[quantityOfCoils];
+		coils[0] = true;
+		coils[5] = true;
+		coils[8] = true;
 
-        BitSet coils = new BitSet(quantityOfCoils);
-        coils.set(0);
-        coils.set(5);
-        coils.set(8);
+		WriteMultipleCoilsResponse writeMultipleCoils = modbusClient
+				.writeMultipleCoils(12321, quantityOfCoils, coils);
 
-        WriteMultipleCoilsResponse writeMultipleCoils = modbusClient.writeMultipleCoils(12321, quantityOfCoils, coils);
+		assertNotNull(writeMultipleCoils);
 
-        assertNotNull(writeMultipleCoils);
-
-        System.out.println(writeMultipleCoils);
-    }
+		System.out.println(writeMultipleCoils);
+	}
 }

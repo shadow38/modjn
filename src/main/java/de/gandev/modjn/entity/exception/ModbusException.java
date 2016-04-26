@@ -15,6 +15,8 @@
  */
 package de.gandev.modjn.entity.exception;
 
+import de.gandev.modjn.entity.func.ModbusExceptionCode;
+
 /**
  * Manage a modbus exception which can be sent to the modbus client.
  */

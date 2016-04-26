@@ -25,9 +25,21 @@ public class ErrorResponseException extends Exception {
 
 	private static final long serialVersionUID = -2127215680991545040L;
 	
-	int exceptionCode;
+	private short functionCode;
+	private short exceptionCode;
 
     public ErrorResponseException(ModbusExceptionResponse function) {
         super(function.toString());
+        
+       functionCode = function.getFunctionCode();
+       exceptionCode = function.getExceptionCode();
     }
+    
+    public short getFunctionCode() {
+		return functionCode;
+	}
+    
+    public int getExceptionCode() {
+		return exceptionCode;
+	}
 }
